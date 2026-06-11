@@ -3,6 +3,9 @@ using RDKitForUnity;
 public class Testrun : MonoBehaviour
 {
     public RenderingData renderingData;
+    public Mesh bondmesh;
+    public Material bondmaterial;
+    public string test;
     RDKitUnityFuncs _funcs;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -16,7 +19,8 @@ public class Testrun : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.P))
         {
-            _funcs.GenerateBaseMolecule(renderingData,"Assets/4UWA.pdb");
+            _funcs.GenerateBaseMolecule(renderingData,$"Assets/{test}",mode: renderingData.renderMode, showHydrogens: true);
+
         }
     }
 }

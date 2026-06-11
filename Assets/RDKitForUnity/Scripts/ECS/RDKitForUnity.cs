@@ -1,21 +1,35 @@
 using UnityEngine;
 using GraphMolWrap;
-using System.IO;
 using System.Collections.Generic;
 using AtomData;
-using System;
-using System.Collections;
 using RDKitForUnityHelpers;
 using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Entities;
 using Unity.Jobs;
-using System.Threading;
+using System.IO;
 namespace RDKitForUnity
 {
+
     public class RDKitUnityFuncs
     {
+        // Try to guess what molfile is being used
+        private RWMol RDKitmolgen(string filename, bool sanitize = true)
+        {
+            switch (filename.Substring(filename.LastIndexOf('.')+1))
+            {
+                case "pdb":
+                return RWMol.MolFromPDBFile(filename,sanitize);
+                case "mol2":
+                return RWMol.MolFromMol2File(filename,sanitize);
+                case "mol":
+                case "sdf":
+                default:
+                return RWMol.MolFromMolFile(filename,sanitize);
+            }
+        }
         private RWMol rdkmol;
+        // WIP
         public enum RenderMode
         {
             BONDLINE,
@@ -23,19 +37,19 @@ namespace RDKitForUnity
             SIMPLEBONDLINE,
             SIMPLELINE
         }
-        public void GenerateBaseMolecule(RenderingData renderingData, string filename, bool genconformer = false, bool showHydrogens = false, RenderMode mode = RenderMode.BONDLINE, float coordinateScale = .1f, float atomRadius = 0.055f, float bondRadius = 0.0085f)
+        public void GenerateBaseMolecule(RenderingData renderingData, string filename, bool genconformer = false, bool showHydrogens = false, RenderMode mode = RenderMode.BONDLINE, float coordinateScale = .1f, float atomRadius = 0.055f, float bondRadius = 0.0085f, bool vr = false)
         {
            // Define some basic lists and the RDKit RWMol
             var positionList = new List<Vector3>();
             var elementList = new List<string>();
-            Debug.Log("hi");
+            Debug.Log(filename.Substring(filename.LastIndexOf('.')+1));
             try
             {
-            rdkmol = RWMol.MolFromPDBFile(filename);
+            rdkmol = RDKitmolgen(filename);
             }
             catch
             {
-            rdkmol = RWMol.MolFromPDBFile(filename,false);
+            rdkmol = RDKitmolgen(filename,false);
             }
 
             Debug.Log(rdkmol);
@@ -45,16 +59,11 @@ namespace RDKitForUnity
                 Debug.LogError($"RDKit failed to load molecule file: {filename}");
             }
             // Address flags for things such as generating 3D conformers and showing hydrogens
-            if (genconformer == true)
+            if (showHydrogens == true)
             {
                 RDKFuncs.addHs(rdkmol);
                 DistanceGeom.EmbedMolecule(rdkmol);
                 ForceField.MMFFOptimizeMolecule(rdkmol,"MMFF94s");
-            }
-            else if (showHydrogens == true)
-            {
-                RDKFuncs.addHs(rdkmol);
-                DistanceGeom.EmbedMolecule(rdkmol);
             }
 
             // Name and define the positions of the elements in the molecule
@@ -244,6 +253,7 @@ namespace RDKitForUnity
                 }
 
             }
+        
         molecule.MoleculeRoot = new GameObject();
         molecule.MoleculeRoot.transform.position = Vector3.zero;
         molecule.MoleculeRoot.transform.rotation = Quaternion.identity;
@@ -285,26 +295,43 @@ namespace RDKitForUnity
         var y = entityManager.GetComponentData<EntityPrefabComponent>(x[1]);
         var z = entityManager.GetComponentData<EntityPrefabComponent>(x[0]);
         var ecb = new EntityCommandBuffer(Allocator.TempJob);
-        AtomPlotterJob atomPlotterJob = new AtomPlotterJob
-        {
-            atomEntity = y.Prefab,
-            ECB = ecb.AsParallelWriter(),
-            location = positiondata.AsArray(),
-            element = elementdata.AsArray()
-        
-        };
-        BondPlotterJob bondPlotterJob = new BondPlotterJob
-        {
-            bondEntity = z.Prefab,
-            ECB = ecb.AsParallelWriter(),
-            transformdata = bondMatrices,
-            element = bondColors.AsArray()
+        if (mode == RenderMode.LINE || mode == RenderMode.SIMPLELINE)
+            {      
+                BondPlotterJob bondPlotterJob = new BondPlotterJob
+                {
+                    bondEntity = z.Prefab,
+                    ECB = ecb.AsParallelWriter(),
+                    transformdata = bondMatrices,
+                    element = bondColors.AsArray()
 
-        };
-        JobHandle handle = atomPlotterJob.Schedule(molecule.AtomPositions.Count, 16);
-        JobHandle handle2 = bondPlotterJob.Schedule(molecule.BondMatrices.Count, 16, handle);
-        handle.Complete();
-        handle2.Complete();
+                };
+                JobHandle handle = bondPlotterJob.Schedule(molecule.BondMatrices.Count, 16);
+                handle.Complete();
+            }
+        else
+        {
+            AtomPlotterJob atomPlotterJob = new AtomPlotterJob
+            {
+                atomEntity = y.Prefab,
+                ECB = ecb.AsParallelWriter(),
+                location = positiondata.AsArray(),
+                element = elementdata.AsArray()
+            
+            };         
+            BondPlotterJob bondPlotterJob = new BondPlotterJob
+            {
+                bondEntity = z.Prefab,
+                ECB = ecb.AsParallelWriter(),
+                transformdata = bondMatrices,
+                element = bondColors.AsArray()
+
+            };
+            JobHandle handle = atomPlotterJob.Schedule(molecule.AtomPositions.Count, 16);
+            JobHandle handle2 = bondPlotterJob.Schedule(molecule.BondMatrices.Count, 16, handle);
+            handle.Complete();
+            handle2.Complete(); 
+        }
+
         ecb.Playback(entityManager);
         bondMatrices.Dispose();
         bondColors.Dispose();
