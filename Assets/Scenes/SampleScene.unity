@@ -506,7 +506,7 @@ GameObject:
   - component: {fileID: 1000324857}
   - component: {fileID: 1000324856}
   m_Layer: 0
-  m_Name: Testrun
+  m_Name: RendererObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -525,9 +525,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderingData: {fileID: 11400000, guid: 2018e5fe66f3f824facde7447e1270b9, type: 2}
-  bondmesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-  bondmaterial: {fileID: 2100000, guid: 2d07601786d932246a878679970551e5, type: 2}
-  test: Conformer3D_COMPOUND_CID_681.sdf
+  templateBondMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  atomMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  bondMaterial: {fileID: 2100000, guid: 2d07601786d932246a878679970551e5, type: 2}
+  test: 4UWA.pdb
 --- !u!4 &1000324857
 Transform:
   m_ObjectHideFlags: 0

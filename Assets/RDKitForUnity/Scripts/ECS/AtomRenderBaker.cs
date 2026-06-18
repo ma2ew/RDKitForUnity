@@ -21,7 +21,7 @@ public class AtomRenderBaker : Baker<AtomRenderAuthoring>
         var prototype = GetEntity(TransformUsageFlags.Dynamic);
 
         // The baked prefabEntity already has all rendering components from conversion
-        AddComponent(prototype, new PointPrototypeTag());
+        AddComponent(prototype, new AtomPrototypeTag());
         AddComponent(prototype, new EntityPrefabComponent { Prefab = prefabEntity });
 
 
@@ -45,7 +45,7 @@ public class BondRenderBaker : Baker<BondRenderAuthoring>
     }
 }
 // In use
-public struct PointPrototypeTag : IComponentData { }
+public struct AtomPrototypeTag : IComponentData { }
 public struct BondPrototypeTag : IComponentData { }
 public struct EntityPrefabComponent : IComponentData
 {

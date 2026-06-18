@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b9003046027056488ba1f4d2bf2eb7b, type: 3}
   m_Name: RenderingData
   m_EditorClassIdentifier: 
-  renderMode: 1
+  renderMode: 0
   buffersize: 107692
