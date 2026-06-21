@@ -1,52 +1,46 @@
-using System.Collections.Generic;
 using UnityEngine;
 using GraphMolWrap;
-using System.IO;
 using Unity.Mathematics;
-using Unity.Collections;
-using Unity.Entities;
-using Unity.Jobs;
 using AtomData;
-using NUnit.Framework.Interfaces;
+
 namespace RDKitForUnityHelpers
 {
-    
-    // Class for standard Molecules
-using System.Collections.Generic;
-using UnityEngine;
-using Unity.Mathematics; // Needed for float4x4 and float4
-public abstract class RDKFUMoleculeParent
+    using System.Collections.Generic;
+    using UnityEngine;
+    using Unity.Mathematics; // Needed for float4x4 and float4
+    /// <summary>
+    /// The general class that both the Desktop and VR molecule inherit from.
+    /// </summary>
+    public abstract class RDKFUMoleculeParent
     {
-    public List<Vector3> AtomPositions = new List<Vector3>(); 
-    public List<int> AtomElements = new List<int>(); 
-    public Dictionary<int, List<Matrix4x4>> AtomMatrices = new Dictionary<int, List<Matrix4x4>>(); 
-    public List<float4x4> BondMatrices = new List<float4x4>(); 
-    public List<float4> BondColors = new List<float4>(); 
-    public GameObject MoleculeRoot; 
-    public List<Bond.BondType> BondOrders = new List<Bond.BondType>(); 
-    
-    public Dictionary<Color, MaterialPropertyBlock> BondMPBs = new Dictionary<Color, MaterialPropertyBlock>(); 
-    public Dictionary<Color, MaterialPropertyBlock> AtomMPBs = new Dictionary<Color, MaterialPropertyBlock>(); 
-    
-    public Dictionary<Color, List<Matrix4x4>> WorldAtomMatrices = new Dictionary<Color, List<Matrix4x4>>(); 
-    public Dictionary<Color, List<Matrix4x4>> WorldBondMatrices = new Dictionary<Color, List<Matrix4x4>>(); 
-    
-    // public RWMol rdkmol; // Commented out to compile cleanly without RDKit references
-    public Matrix4x4 oldltw; 
+        public List<Vector3> AtomPositions = new List<Vector3>(); 
+        public List<int> AtomElements = new List<int>(); 
+        public Dictionary<int, List<Matrix4x4>> AtomMatrices = new Dictionary<int, List<Matrix4x4>>(); 
+        public List<float4x4> BondMatrices = new List<float4x4>(); 
+        public List<float4> BondColors = new List<float4>(); 
+        public GameObject MoleculeRoot; 
+        public List<Bond.BondType> BondOrders = new List<Bond.BondType>(); 
 
-    
-    public RWMol rdkmol;
+        public Dictionary<Color, MaterialPropertyBlock> BondMPBs = new Dictionary<Color, MaterialPropertyBlock>(); 
+        public Dictionary<Color, MaterialPropertyBlock> AtomMPBs = new Dictionary<Color, MaterialPropertyBlock>(); 
+
+        public Dictionary<Color, List<Matrix4x4>> WorldAtomMatrices = new Dictionary<Color, List<Matrix4x4>>(); 
+        public Dictionary<Color, List<Matrix4x4>> WorldBondMatrices = new Dictionary<Color, List<Matrix4x4>>(); 
+        public Matrix4x4 oldltw; 
+        public RWMol rdkmol;
     }
-public class RDKFUMolecule: RDKFUMoleculeParent
-{ 
 
     /// <summary>
-    /// Safely cleans up GPU resources to prevent VRAM memory leaks.
+    /// The class used for desktop molecules.
     /// </summary>
+    public class RDKFUMolecule: RDKFUMoleculeParent
+    { 
 
-}
+    }
 
-    // Class for VR Molecules
+    /// <summary>
+    /// The class used for VR molecules.
+    /// </summary>
     public class RDKFUMoleculeVR: RDKFUMoleculeParent
     {
 
@@ -55,27 +49,26 @@ public class RDKFUMolecule: RDKFUMoleculeParent
         public LineRenderer LineRenderer;
 
     }
+    /// <summary>
+    /// Class used for keeping up with molecules fed to the GPU Instancing pipeline.
+    /// </summary>
     public class RKDFURenderFunctions
     {
-        public static List<RDKFUMolecule> MoleculeRenderList  = new List<RDKFUMolecule>();
-        public static List<RDKFUMoleculeVR> VRMoleculeRenderList  = new List<RDKFUMoleculeVR>();
+        /// <summary>
+        /// Renderlist for Desktop and VRmolecules. The GPU Instancing function iterates through this list per molecule.
+        /// While a renderlist exists for both Desktop and VR molecules, it is highly advisable to stick with ECS rendering on the Desktop molecules.
+        /// </summary>
+        public static List<RDKFUMoleculeParent> MoleculeRenderList  = new List<RDKFUMoleculeParent>();
 
-        public static void AddToMoleculeRenderList(RDKFUMolecule molecule)
+        public static void AddToMoleculeRenderList(RDKFUMoleculeParent molecule)
         {
             MoleculeRenderList.Add(molecule);
         }
-        public static void AddToMoleculeRenderList(RDKFUMoleculeVR molecule)
-        {
-            VRMoleculeRenderList.Add(molecule);
-        }
-        public static void RemoveFromMoleculeRenderList(RDKFUMolecule molecule)
+        public static void RemoveFromMoleculeRenderList(RDKFUMoleculeParent molecule)
         {
             MoleculeRenderList.Remove(molecule);
         }
-        public static void RemoveFromMoleculeRenderList(RDKFUMoleculeVR molecule)
-        {
-            VRMoleculeRenderList.Remove(molecule);
-        }  
+
 
     }
 }
@@ -83,6 +76,11 @@ namespace RDKitForUnity
 {
     public partial class RDKitUnityFuncs
     {
+        /// <summary>
+        /// Gamma color correction function. Implemented for float4s used in Jobs.
+        /// </summary>
+        /// <param name="gammaColor"></param>
+        /// <returns></returns>
         public static float4 GammaToLinear(float4 gammaColor)
         {
             return new float4(
@@ -92,13 +90,21 @@ namespace RDKitForUnity
                 gammaColor.w // alpha unchanged
             );
         }
+        /// <summary>
+        /// Function to generate bonds for a molecule. Currently handles single, double, and triple bonds.
+        /// </summary>
+        /// <param name="molecule">The molecule object in question. Can be either VR or Desktop, as the function operates on the parent class.</param>
+        /// <param name="mode">The render mode currently in use (bondline, ball+stick, etc.) </param>
+        /// <param name="bondRadius">User-derived radius parameter.</param>
         partial void BondGen(RDKitForUnityHelpers.RDKFUMoleculeParent molecule, RDKitUnityFuncs.RenderMode mode, float bondRadius)
         {
-            // Bond logic for creating clean and accurate bonds
+            // Normal #1 for sp2 alignment w/ respect to double bond neighbors.
             Vector3 firstplaneNormal;
+            // Normal #1 for sp2 alignment w/ respect to double bond neighbors. This plane normal is necessary as the first normal is perpendicular to the sp2 plane.
             Vector3 planeNormal;
             var bonds = molecule.rdkmol.getBonds();
-            if (mode == RenderMode.SIMPLEBONDLINE || mode == RenderMode.SIMPLELINE)
+            // Generates bonds without showing bond order.
+            if (mode == RenderMode.SIMPLEBALLSTICK || mode == RenderMode.SIMPLEBONDLINE)
             {
                 foreach (Bond bond in bonds)
                     {
@@ -112,15 +118,18 @@ namespace RDKitForUnity
 
                         Vector3 a = molecule.AtomPositions[i];
                         Vector3 b = molecule.AtomPositions[j];
+                        // Midpoint coordinates between the two atoms
                         Vector3 mid = (a + b) * 0.5f;
+                        // Unit vector for direction of the bond
                         Vector3 dir = (b - a).normalized;
+                        // Overall rotation quaternion for the bond
                         Quaternion rot = Quaternion.FromToRotation(Vector3.up, dir);
 
                         // NORMAL SINGLE + COORDINATE/DATIVE BOND
                         void AddBondSegment(Vector3 p1, Vector3 p2, int element, float bondRadius)
                         {
                             var result = (Element)element-1; 
-
+                            // Centers the half-bond segment between the atom and the overall bond midpoint
                             Vector3 midSeg = (p1 + p2) * 0.5f;
                             float length = Vector3.Distance(p1, p2);
                             Vector3 scale = new Vector3(bondRadius, length * 0.5f, bondRadius);
@@ -133,7 +142,8 @@ namespace RDKitForUnity
                         AddBondSegment(b, mid, molecule.AtomElements[j], bondRadius); 
                     }
             }
-            else if (mode == RenderMode.BONDLINE || mode == RenderMode.LINE)
+            // Generates bonds that factor in bond order.
+            else if (mode == RenderMode.BALLSTICK || mode == RenderMode.BONDLINE)
             {
                 foreach (Bond bond in bonds)
                 {
@@ -186,6 +196,7 @@ namespace RDKitForUnity
                         foreach (var n in aNeighbors)
                             if (n.getIdx() != secondAtomIdx) { aNeighborPos = molecule.AtomPositions[(int)n.getIdx()]; break; }
 
+                        // If atom 1 has no neighbors, find the neighbors for atom 2
                         Vector3? bNeighborPos = null;
                         foreach (var n in bNeighbors)
                             if (n.getIdx() != firstAtomIdx) { bNeighborPos = molecule.AtomPositions[(int)n.getIdx()]; break; }
@@ -226,6 +237,7 @@ namespace RDKitForUnity
                         AddBondSegment(a - offsetVec, mid - offsetVec, molecule.AtomElements[i], bondRadius * 0.75f);
                         AddBondSegment(b - offsetVec, mid - offsetVec, molecule.AtomElements[j], bondRadius * 0.75f);
                     }
+                    // Combination of both single and arbitrary plane-based double bond logic, as it generally doesn't need to be aligned to any specific plane.
                     if (bondOrder == Bond.BondType.TRIPLE)
                     {
                         planeNormal = Vector3.Cross(Vector3.right, dir);

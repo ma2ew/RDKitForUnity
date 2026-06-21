@@ -15,10 +15,10 @@ namespace RDKitForUnity
     {        
         public enum RenderMode
         {
+            BALLSTICK,
             BONDLINE,
-            LINE,
-            SIMPLEBONDLINE,
-            SIMPLELINE
+            SIMPLEBALLSTICK,
+            SIMPLEBONDLINE
         }
         // Try to guess what molfile is being used
         private RWMol RDKitmolgen(string filename, bool sanitize = true)
@@ -38,7 +38,7 @@ namespace RDKitForUnity
         partial void BondGen(RDKFUMoleculeParent molecule, RDKitUnityFuncs.RenderMode mode, float bondRadius);
         private RWMol rdkmol;
         // WIP
-        public void GenerateBaseMolecule(RenderingData renderingData, string filename, bool genconformer = false, bool showHydrogens = false, RenderMode mode = RenderMode.BONDLINE, float coordinateScale = .1f, float atomRadius = 0.055f, float bondRadius = 0.0085f, bool vr = false)
+        public void GenerateBaseMolecule(RenderingData renderingData, string filename, bool genconformer = false, bool showHydrogens = false, RenderMode mode = RenderMode.BALLSTICK, float coordinateScale = .1f, float atomRadius = 0.055f, float bondRadius = 0.0085f, bool vr = false)
         {
            // Define some basic lists and the RDKit RWMol
             var positionList = new List<Vector3>();
@@ -102,24 +102,25 @@ namespace RDKitForUnity
                 BondMatrices = new List<float4x4>(),
                 BondColors = new List<float4>()
             };
-                for (int i = 0; i < molecule.AtomPositions.Count; i++)
-                {
-                    var e = molecule.AtomElements[i];
-                    var result = (Element)molecule.AtomElements[i]-1; 
-                    if (!molecule.AtomMatrices.ContainsKey(e))
+            if (mode == RenderMode.BALLSTICK || mode == RenderMode.SIMPLEBALLSTICK)
+                { 
+                    for (int i = 0; i < molecule.AtomPositions.Count; i++)
+                    {
+                        var e = molecule.AtomElements[i];
+                        var result = (Element)molecule.AtomElements[i]-1; 
+                        if (!molecule.AtomMatrices.ContainsKey(e))
 
                         molecule.AtomMatrices[e] = new List<Matrix4x4>();
 
-                    Matrix4x4 mat = Matrix4x4.TRS(
-                        molecule.AtomPositions[i],
-                        Quaternion.identity,
-                        Vector3.one * (atomRadius * AtomicRadiiAndColors.Radius(result)));
+                        Matrix4x4 mat = Matrix4x4.TRS(
+                            molecule.AtomPositions[i],
+                            Quaternion.identity,
+                            Vector3.one * (atomRadius * AtomicRadiiAndColors.Radius(result)));
 
-                    molecule.AtomMatrices[e].Add(mat);
+                        molecule.AtomMatrices[e].Add(mat);
 
+                    }
                 }
-
-
             BondGen(molecule, mode, bondRadius);
         
             molecule.MoleculeRoot = new GameObject();
@@ -163,7 +164,7 @@ namespace RDKitForUnity
                 var bondSingleton = bondprefab.GetSingletonEntity();
                 var atomPrefabComponent = entityManager.GetComponentData<EntityPrefabComponent>(atomSingleton);
                 var bondPrefabComponent = entityManager.GetComponentData<EntityPrefabComponent>(bondSingleton);
-                if (mode == RenderMode.LINE || mode == RenderMode.SIMPLELINE)
+                if (mode == RenderMode.BONDLINE || mode == RenderMode.SIMPLEBONDLINE)
                     {      
                         BondPlotterJob bondPlotterJob = new BondPlotterJob
                         {
@@ -219,6 +220,7 @@ namespace RDKitForUnity
                     ecbSystem.AddJobHandleForProducer(combinedHandle);                
                 }
             }
+            rdkmol.Dispose();
         }
     }
 }

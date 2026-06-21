@@ -528,7 +528,7 @@ MonoBehaviour:
   templateBondMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
   atomMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   bondMaterial: {fileID: 2100000, guid: 2d07601786d932246a878679970551e5, type: 2}
-  test: 4UWA.pdb
+  test: Conformer3D_COMPOUND_CID_681.sdf
 --- !u!4 &1000324857
 Transform:
   m_ObjectHideFlags: 0
