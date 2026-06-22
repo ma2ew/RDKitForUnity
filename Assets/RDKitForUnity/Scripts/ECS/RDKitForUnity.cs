@@ -90,7 +90,7 @@ namespace RDKitForUnity
             }
             rdkmol.Kekulize();
 
-            // Establish the basic components of the molecule class
+            // Establish the basic components of the VR molecule class if applicable
             if (vr)
             {
             var molecule = new RDKFUMoleculeVR
@@ -102,6 +102,7 @@ namespace RDKitForUnity
                 BondMatrices = new List<float4x4>(),
                 BondColors = new List<float4>()
             };
+            // Used atoms are to be included in the visual depiction
             if (mode == RenderMode.BALLSTICK || mode == RenderMode.SIMPLEBALLSTICK)
                 { 
                     for (int i = 0; i < molecule.AtomPositions.Count; i++)
@@ -129,6 +130,7 @@ namespace RDKitForUnity
             molecule.oldltw = Matrix4x4.zero;
             RKDFURenderFunctions.AddToMoleculeRenderList(molecule);                
             }
+            // If not VR, generate a Desktop molecule
             else
             {
                 var molecule = new RDKFUMolecule
@@ -153,7 +155,7 @@ namespace RDKitForUnity
                     bondMatrices[i] = molecule.BondMatrices[i];
                     bondColors[i] = GammaToLinear(molecule.BondColors[i]);
                 }
-
+                // Setup for ECS entity instantiation
                 var ecbSystem = World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<EndSimulationEntityCommandBufferSystem>();
                 var atomEcb = ecbSystem.CreateCommandBuffer().AsParallelWriter();                
                 var bondEcb = ecbSystem.CreateCommandBuffer().AsParallelWriter();                  
@@ -164,6 +166,8 @@ namespace RDKitForUnity
                 var bondSingleton = bondprefab.GetSingletonEntity();
                 var atomPrefabComponent = entityManager.GetComponentData<EntityPrefabComponent>(atomSingleton);
                 var bondPrefabComponent = entityManager.GetComponentData<EntityPrefabComponent>(bondSingleton);
+
+                // If bondline only, does not instantiate atoms
                 if (mode == RenderMode.BONDLINE || mode == RenderMode.SIMPLEBONDLINE)
                     {      
                         BondPlotterJob bondPlotterJob = new BondPlotterJob
@@ -177,6 +181,7 @@ namespace RDKitForUnity
                         JobHandle handle = bondPlotterJob.Schedule(molecule.BondMatrices.Count, 16);
                         ecbSystem.AddJobHandleForProducer(handle);
                     }
+                // If ball+stick, include atom instantiation when rendering
                 else
                 {
                 NativeArray<Element> elementdata = new NativeArray<Element>(molecule.AtomPositions.Count, Allocator.TempJob); 
@@ -220,6 +225,7 @@ namespace RDKitForUnity
                     ecbSystem.AddJobHandleForProducer(combinedHandle);                
                 }
             }
+            // Function used to dispose of the unmanaged RWMol object
             rdkmol.Dispose();
         }
     }
