@@ -1,7 +1,9 @@
 # RDKitForUnity
 
 This project is a Software Development Kit (SDK) designed to integrate RDKit functionality into Unity, along with a molecular visualization library supporting both Desktop and VR viewing.
-
+## Contents
+* [Necessary Applications and Packages](#necessary-applications-and-packages)
+* [SDK Folders](#sdk-folders)
 ## Necessary Applications and Packages
 
 * Unity: The software development engine that this SDK is built on. Unity can be downloaded from https://unity.com/
