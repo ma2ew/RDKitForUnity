@@ -27,16 +27,16 @@ This file defines an enum called **Element**, which is used to send RDKit and RD
 ## RenderingData
 
 This file creates a "ScriptableObject" that allows the user to change between various models of molecular visualization. These include:
-* Ball+Stick Models: This is the conventional atom+bond depiction
-* Bondline Models: This strictly depicts the bonds themselves and excludes the atoms from the display
-* Simple Ball+Stick: This is equivalent to Ball+Stick, but excludes bond orders
-* Simple Bondline: This is equivalent to Bondline, but excludes bond orders
+* **Ball+Stick Models**: This is the conventional atom+bond depiction
+* **Bondline Models**: This strictly depicts the bonds themselves and excludes the atoms from the display
+* **Simple Ball+Stick**: This is equivalent to Ball+Stick, but excludes bond orders
+* **Simple Bondline**: This is equivalent to Bondline, but excludes bond orders
 <br><br>
 
 ## Android Preset, TestMaterial and Performance URP Config
 
-Android Preset: This is the default preset used in the render pipeline to render the project. Can be changed by the developer if so desired. The preset chosen provides a decent match of rendering quality and performance.
+**Android Preset**: This is the default preset used in the render pipeline to render the project. Can be changed by the developer if so desired. The preset chosen provides a decent match of rendering quality and performance.
 
-Performance URP Config: This is also a performance-centered rendering configuration file. This contains multiple options for visual fidelity and noise reduction options that can be manually modified by the developer.
+**Performance URP Config**: This is also a performance-centered rendering configuration file. This contains multiple options for visual fidelity and noise reduction options that can be manually modified by the developer.
 
-TestMaterial.mat: This is the material placed onto atoms and bond prefabs. It is designed to be a performant material which does not significantly impact framerates, but can be swapped out or modified if necessary
+**TestMaterial.mat**: This is the material placed onto atoms and bond prefabs. It is designed to be a performant material which does not significantly impact framerates, but can be swapped out or modified if necessary
