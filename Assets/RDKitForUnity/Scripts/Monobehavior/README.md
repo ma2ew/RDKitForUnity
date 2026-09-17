@@ -1,6 +1,6 @@
 # Monobehavior Folder
 
-This folder, though misleadingly named, does contain strictly Monobehavior scripts. There are two scripts of interest.
+This folder, though misleadingly named, does contain strictly Monobehavior scripts. There are two scripts located here:
 
 1) **Camera Movement**: This script can be attached to a camera and allows it to be controlled using desktop controls (mouse dragging and keyboard input) Some of the controls are as follows:
     * WASD keys - Forwards, left, backwards, and right controls respectively.
