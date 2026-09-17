@@ -4,7 +4,7 @@ This folder contains data corresponding to molecular objects (e.g. Bond Variant.
 <br><br><br>
 
 ## Contents
-* [Prefab Explanations](#bond-variant-and-ummappointrenderer-variant-prefabs)
+* [Prefab Explanations](#bond-variant-and-umappointrenderer-variant-prefabs)
 * [CPKColorsAndRadii](#cpkcolorsandradii)
 * [RenderingData](#renderingdata)
 * [Configurable Rendering Options](#android-preset-testmaterial-and-performance-urp-config)
